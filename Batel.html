@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازی دوز</title>
+<style>
+    body {
+        font-family: Vazirmatn, sans-serif;
+        background: linear-gradient(135deg, #89f7fe, #66a6ff);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    #container {
+        background: rgba(255,255,255,0.9);
+        padding: 20px 30px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    h1 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .btn {
+        padding: 10px 20px;
+        margin: 5px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: 0.3s;
+    }
+    .btn:hover {
+        transform: scale(1.1);
+    }
+    #gameBoard {
+        display: grid;
+        grid-template-columns: repeat(3, 80px);
+        grid-template-rows: repeat(3, 80px);
+        gap: 5px;
+        margin: 20px auto;
+    }
+    .cell {
+        background: #fff;
+        border-radius: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 36px;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .cell:hover {
+        background: #f0f0f0;
+    }
+    #message {
+        margin-top: 15px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <h1>بازی دوز</h1>
+    <div id="startMenu">
+        <button class="btn" onclick="startGame('1p')">🎮 بازی با بات</button>
+        <button class="btn" onclick="startGame('2p')">👥 بازی دو نفره</button>
+    </div>
+    <div id="difficultyMenu" style="display:none;">
+        <p>سطح سختی را انتخاب کنید:</p>
+        <button class="btn" onclick="setDifficulty('easy')">آسان</button>
+        <button class="btn" onclick="setDifficulty('medium')">متوسط</button>
+        <button class="btn" onclick="setDifficulty('hard')">سخت</button>
+    </div>
+    <div id="game" style="display:none;">
+        <div id="gameBoard"></div>
+        <div id="message"></div>
+        <button class="btn" onclick="resetGame()">🔄 شروع مجدد</button>
+    </div>
+</div>
+
+<script>
+let board = ["","","","","","","","",""];
+let currentPlayer = "X";
+let gameMode = null;
+let difficulty = null;
+let gameOver = false;
+
+function startGame(mode){
+    gameMode = mode;
+    document.getElementById('startMenu').style.display = 'none';
+    if(mode === '1p'){
+        document.getElementById('difficultyMenu').style.display = 'block';
+    } else {
+        initGame();
+    }
+}
+
+function setDifficulty(level){
+    difficulty = level;
+    document.getElementById('difficultyMenu').style.display = 'none';
+    initGame();
+}
+
+function initGame(){
+    board.fill("");
+    currentPlayer = "X";
+    gameOver = false;
+    document.getElementById('gameBoard').innerHTML = '';
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('message').innerText = "نوبت X";
+    for(let i=0;i<9;i++){
+        let cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', playerMove);
+        document.getElementById('gameBoard').appendChild(cell);
+    }
+}
+
+function playerMove(e){
+    let idx = e.target.dataset.index;
+    if(board[idx] !== "" || gameOver) return;
+    board[idx] = currentPlayer;
+    e.target.innerText = currentPlayer;
+    if(checkWinner()){
+        document.getElementById('message').innerText = `${currentPlayer} برنده شد!`;
+        gameOver = true;
+        return;
+    }
+    if(board.every(cell => cell !== "")){
+        document.getElementById('message').innerText = "مساوی شد!";
+        gameOver = true;
+        return;
+    }
+    currentPlayer = (currentPlayer === "X") ? "O" : "X";
+    document.getElementById('message').innerText = "نوبت " + currentPlayer;
+    if(gameMode === '1p' && currentPlayer === "O"){
+        setTimeout(botMove, 400);
+    }
+}
+
+function botMove(){
+    let idx;
+    if(difficulty === 'easy'){
+        let empty = board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+        idx = empty[Math.floor(Math.random()*empty.length)];
+    } else {
+        // Medium & hard: ابتدا تلاش برای برد یا بلاک
+        idx = bestMove();
+    }
+    board[idx] = "O";
+    document.querySelector(`[data-index='${idx}']`).innerText = "O";
+    if(checkWinner()){
+        document.getElementById('message').innerText = "O برنده شد!";
+        gameOver = true;
+        return;
+    }
+    if(board.every(cell => cell !== "")){
+        document.getElementById('message').innerText = "مساوی شد!";
+        gameOver = true;
+        return;
+    }
+    currentPlayer = "X";
+    document.getElementById('message').innerText = "نوبت X";
+}
+
+function checkWinner(){
+    const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+    return wins.some(line => 
+        line.every(idx => board[idx] === currentPlayer)
+    );
+}
+
+function resetGame(){
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('startMenu').style.display = 'block';
+}
+    
+// Simple AI for medium/hard
+function bestMove(){
+    // Hard = try to win, then block
+    const lines = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+    ];
+    // Try to win
+    for(let line of lines){
+        let vals = line.map(i=>board[i]);
+        if(vals.filter(v=>"O"===v).length===2 && vals.includes("")){
+            return line[vals.indexOf("")];
+        }
+    }
+    // Try to block X
+    for(let line of lines){
+        let vals = line.map(i=>board[i]);
+        if(vals.filter(v=>"X"===v).length===2 && vals.includes("")){
+            return line[vals.indexOf("")];
+        }
+    }
+    // Otherwise random
+    let empty = board.map((v,i)=>v===""?i:null).filter(v=>v!==null);
+    return empty[Math.floor(Math.random()*empty.length)];
+}
+</script>
+</body>
+</html>
