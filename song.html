@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">نُوا</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            height: 100%;
+            background: #000;
+            color: #fff;
+            font-family: 'Vazirmatn', -apple-system, sans-serif;
+            overflow-y: auto;            /* این خط مهم بود! */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(20px);
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 26px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 70px;           /* فاصله از دکمه برگشت */
+            padding-bottom: 120px;      /* فاصله برای پلیر پایین */
+        }
+
+        .cover {
+            width: 88vw;
+            max-width: 420px;
+            aspect-ratio: 1;
+            border-radius: 24px;
+            object-fit: cover;
+            margin: 20px auto;
+            display: block;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+        }
+
+        .info {
+            text-align: center;
+            padding: 0 32px;
+        }
+        .title {
+            { font-size: 2.6rem; font-weight: 900; margin-bottom: 8px; }
+        .artist             { font-size: 1.6rem; color: #aaaaaa; font-weight: 500; }
+
+        /* پلیر ثابت پایین صفحه */
+        .player-fixed {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15,15,15,0.95);
+            backdrop-filter: blur(30px);
+            padding: 18px 24px 34px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            z-index: 999;
+        }
+
+        audio {
+            width: 100%;
+            height: 56px;
+            border-radius: 18px;
+        }
+
+        /* استایل زیباتر پلیر در اندروید و آیفون */
+        audio::-webkit-media-controls-panel {
+            background: rgba(30,30,30,0.8);
+            border-radius: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="back-btn" onclick="history.back()">←</button>
+
+    <div class="container">
+        <img id="cover" class="cover" src="https://via.placeholder.com/800" alt="کاور">
+
+        <div class="info">
+            <h1 class="title" id="title">در حال بارگذاری...</h1>
+            <p class="artist" id="artist">نُوا موزیک</p>
+        </div>
+    </div>
+
+    <!-- پلیر پایین صفحه -->
+    <div class="player-fixed">
+        <audio id="audio" controls autoplay preload="auto">
+            <source src="" type="audio/mpeg">
+            مرورگر شما از پخش صدا پشتیبانی نمی‌کنه.
+        </audio>
+    </div>
+
+    <script>
+        // دریافت آهنگ از localStorage
+        const params = new URLSearchParams(location.search);
+        const songTitle = decodeURIComponent(params.get('id') || '');
+        const songs = JSON.parse(localStorage.getItem('novaSongs') || '[]');
+        const song = songs.find(s => s.title === songTitle);
+
+        if (song) {
+            document.title = song.title + ' • نُوا';
+            document.getElementById('title').textContent = song.title;
+            document.getElementById('artist').textContent = song.artist;
+            document.getElementById('cover').src = song.cover || 'https://via.placeholder.com/800';
+
+            const audio = document.getElementById('audio');
+            audio.src = song.music;
+
+            // پخش خودکار (حتی در اندروید)
+            audio.play().catch(e => {
+                console.log("پخش خودکار بلاک شد، کاربر باید خودش بزنه");
+            });
+
+        } else {
+            document.body.innerHTML = '<div style="color:#888;text-align:center;padding:100px;font-size:1.5rem">آهنگ پیدا نشد نشد :(</div>';
+        }
+    </script>
+</body>
+</html>

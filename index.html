@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نُوا • Nova Music</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23000'/><path fill='%23fff' d='M40 35 L40 65 L65 50 Z'/></svg>">
+    <style>
+        :root{
+            --bg:#000;
+            --card:#111;
+            --text:#fff;
+            --text2:#aaa;
+            --border:#333;
+            --hover:#222;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            font-family:'Vazirmatn',sans-serif;
+            background:var(--bg);
+            color:var(--text);
+            min-height:100dvh;
+            padding-top:90px;
+        }
+        .header{
+            position:fixed;top:0;left:0;right:0;height:90px;
+            background:rgba(0,0,0,0.9);backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border);
+            display:flex;align-items:center;padding:0 24px;z-index:1000;
+        }
+        .logo{
+            font-size:2.8rem;font-weight:900;
+            letter-spacing:-1px;
+        }
+        #search{
+            flex:1;max-width:600px;margin-right:20px;
+            padding:16px 24px;border-radius:50px;
+            border:none;background:#111;color:white;
+            font-size:1.1rem;outline:none;
+        }
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+            gap:20px;padding:20px;
+        }
+        .card{
+            background:var(--card);
+            border-radius:20px;
+            overflow:hidden;
+            border:1px solid var(--border);
+            transition:0.3s;
+            cursor:pointer;
+        }
+        .card:hover{
+            transform:translateY(-8px);
+            box-shadow:0 20px 40px rgba(0,0,0,0.6);
+            border-color:#555 solid 1px;
+        }
+        .card img{
+            width:100%;aspect-ratio:1;object-fit:cover;
+            filter:grayscale(30%);
+            transition:0.4s;
+        }
+        .card:hover img{
+            filter:grayscale(0%);
+        }
+        .info{
+            padding:16px;text-align:center;
+        }
+        .title{
+            font-weight:900;font-size:1.15rem;margin-bottom:4px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+        }
+        .artist{
+            font-size:0.95rem;color:var(--text2);
+        }
+        .empty{
+            text-align:center;padding:100px 20px;font-size:1.4rem;color:#555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">نُوا</div>
+    <input type="text" id="search" placeholder="جستجو...">
+</div>
+
+<div class="grid" id="songs">
+    <div class="empty">در حال بارگذاری آهنگ‌ها...</div>
+</div>
+
+<script>
+    const container = document.getElementById('songs');
+    let songs = [];
+
+    function render(list){
+        if(list.length===0){
+            container.innerHTML = `<div class="empty">هنوز آهنگی اضافه نشده<br><small style="color:#777">از پنل مدیریت استفاده کن</small></div>`;
+            return;
+        }
+        container.innerHTML = '';
+        list.forEach(song => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.onclick = () => location.href = `song.html?id=${encodeURIComponent(song.title)}`;
+            div.innerHTML = `
+                <img src="${song.cover}" alt="${song.title}">
+                <div class="info">
+                    <div class="title">${song.title}</div>
+                    <div class="artist">${song.artist}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function load(){
+        songs = JSON.parse(localStorage.getItem('novaSongs') || '[]');
+        render(songs);
+    }
+
+    // جستجو
+    document.getElementById('search').addEventListener('input', e => {
+        const q = e.target.value.trim().toLowerCase();
+        const filtered = songs.filter(s => 
+            s.title.toLowerCase().includes(q) || 
+            s.artist.toLowerCase().includes(q)
+        );
+        render(filtered);
+    });
+
+    load();
+    setInterval(load, 3000);
+</script>
+</body>
+</html>

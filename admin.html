@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت • نُوا</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@600;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--pink:#ff1493;--purple:#9c27b0;--blue:#6a0dad;--grad:linear-gradient(135deg,var(--pink),var(--purple),var(--blue));--glow:0 0 30px rgba(255,20,147,0.6);}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Vazirmatn',sans-serif;background:#0d0b14;color:#fff;min-height:100dvh;padding:20px;
+            background-image:radial-gradient(circle at 50% 50%,rgba(156,39,176,0.15),transparent 70%)}
+        h1{font-size:2.8rem;text-align:center;margin:40px 0;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:var(--glow);}
+        form{background:rgba(255,255,255,0.06);padding:30px;border-radius:26px;backdrop-filter:blur(15px);border:1px solid rgba(156,39,176,0.3);max-width:600px;margin:0 auto;box-shadow:0 20px 50px rgba(0,0,0,0.6)}
+        input, button{margin:12px 0;width:100%;padding:18px;font-size:1.2rem;border-radius:16px;border:none;outline:none}
+        input{background:rgba(255,255,255,0.1);color:white;box-shadow:inset 0 4px 15px rgba(0,0,0,0.4)}
+        button{background:var(--grad);color:white;font-weight:900;cursor:pointer;box-shadow:var(--glow);transition:0.4s}
+        button:hover{transform:translateY(-4px);box-shadow:0 15px 40px rgba(255,20,147,0.6)}
+        .songs-list{margin-top:50px}
+        .song-item{background:rgba(255,255,255,0.08);padding:16px;margin:12px 0;border-radius:16px;display:flex;justify-content:space-between;align-items:center}
+        .delete-btn{background:#c62828;padding:8px 16px;border-radius:10px;font-size:0.9rem}
+    </style>
+</head>
+<body>
+
+<h1>پنل مدیریت نُوا</h1>
+
+<form id="addForm">
+    <input type="text" id="title" placeholder="نام آهنگ" required>
+    <input type="text" id="artist" placeholder="نام خواننده یا گروه" required>
+    <input type="url" id="music" placeholder="لینک مستقیم فایل mp3 (مثال: https://dl.nova.ir/songs/song1.mp3)" required>
+    <input type="url" id="cover" placeholder="لینک کاور (ترجیحاً مربع 1000x1000)" required>
+    <button type="submit">اضافه کردن آهنگ</button>
+</form>
+
+<div class="songs-list" id="list"></div>
+
+<script>
+    const form = document.getElementById('addForm');
+    const list = document.getElementById('list');
+
+    function renderList() {
+        let songs = JSON.parse(localStorage.getItem('novaSongs') || '[]');
+        list.innerHTML = '';
+        songs.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = 'song-item';
+            div.innerHTML = `
+                <div>
+                    <strong>${s.title}</strong> — ${s.artist}
+                    <br><small style="opacity:0.7">${s.music.substr(0,50)}...</small>
+                </div>
+                <button class="delete-btn" onclick="deleteSong(${i})">حذف</button>
+            `;
+            list.appendChild(div);
+        });
+        if (songs.length === 0) list.innerHTML = '<p style="text-align:center;opacity:0.6">هنوز آهنگی اضافه نشده</p>';
+    }
+
+    form.onsubmit = e => {
+        e.preventDefault();
+        const newSong = {
+            title: document.getElementById('title').value.trim(),
+            artist: document.getElementById('artist').value.trim(),
+            music: document.getElementById('music').value.trim(),
+            cover: document.getElementById('cover').value.trim()
+        };
+
+        let songs = JSON.parse(localStorage.getItem('novaSongs') || '[]');
+        songs.push(newSong);
+        localStorage.setItem('novaSongs', JSON.stringify(songs));
+
+        form.reset();
+        alert('آهنگ با موفقیت اضافه شد! حالا برو صفحه اصلی و ببینش ');
+        renderList();
+    };
+
+    function deleteSong(index) {
+        let songs = JSON.parse(localStorage.getItem('novaSongs') || '[]');
+        if (confirm('مطمئنی می‌خوای این آهنگ رو حذف کنی؟')) {
+            songs.splice(index, 1);
+            localStorage.setItem('novaSongs', JSON.stringify(songs));
+            renderList();
+        }
+    }
+
+    renderList();
+</script>
+
+</body>
+</html>
